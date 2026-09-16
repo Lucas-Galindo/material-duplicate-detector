@@ -1,0 +1,7 @@
+{
+  "_comment": "Grupos de termos equivalentes (mesmo conceito). Preenchido/consumido na Sprint 4.",
+  "groups": [
+    ["DIANT", "DIANTEIRO", "DIANTEIRA"],
+    ["TRAS", "TRASEIRO", "TRASEIRA"]
+  ]
+}

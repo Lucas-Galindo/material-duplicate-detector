@@ -1,0 +1,9 @@
+{
+  "_comment": "Termos tecnicos que, se diferentes, NUNCA podem ser considerados equivalentes. Preenchido/consumido na Sprint 4.",
+  "incompatible_groups": [
+    ["DIANTEIRO", "TRASEIRO"],
+    ["ESQUERDO", "DIREITO"],
+    ["MASCULINO", "FEMININO"],
+    ["AZUL", "PRETO", "VERMELHO", "VERDE", "BRANCO", "AMARELO"]
+  ]
+}
