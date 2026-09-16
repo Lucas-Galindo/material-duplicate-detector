@@ -1,0 +1,60 @@
+name: Publicação automática
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cria arquivo temporário para a chave privada
+        run: |
+          echo "${{ secrets.KEY }}" > /tmp/private_key
+          chmod 600 /tmp/private_key
+
+      - name: Backup da aplicação atual antes da substituição
+        run: |
+          ssh -i /tmp/private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.HOST }} \
+          "sudo mkdir -p /home/ubuntu/backups && \
+           if [ -d /home/ubuntu/material_duplicate_detector ]; then \
+             sudo tar -czf /home/ubuntu/backups/backup_\$(date +%Y%m%d_%H%M%S).tar.gz -C /home/ubuntu material_duplicate_detector; \
+           fi"
+
+      - name: Ajustar permissões no servidor
+        run: |
+          ssh -i /tmp/private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.HOST }} \
+          "sudo mkdir -p /home/ubuntu/material_duplicate_detector && \
+           sudo chown -R ubuntu:ubuntu /home/ubuntu/material_duplicate_detector"
+
+      - name: Transferindo os arquivos da aplicação
+        run: |
+          scp -i /tmp/private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r \
+          ${{ github.workspace }}/* ubuntu@${{ secrets.HOST }}:/home/ubuntu/material_duplicate_detector
+
+      - name: Instalando dependências e reiniciando o serviço
+        run: |
+          ssh -i /tmp/private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.HOST }} \
+          "cd /home/ubuntu/material_duplicate_detector && \
+           source venv/bin/activate && \
+           pip install -r requirements.txt && \
+           sudo systemctl restart appdemo1.service"
+
+      - name: Limpa o arquivo de chave privada
+        if: always()
+        run: rm -f /tmp/private_key
+
+      - name: Notificar sucesso no Discord
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"content":"✅ Deploy do Detector de Duplicidade realizado com sucesso! Commit: ${{ github.sha }}"}' \
+            ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Notificar falha no Discord
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"content":"❌ Deploy do Detector de Duplicidade FALHOU! Commit: ${{ github.sha }}. Verifique os logs no GitHub Actions."}' \
+            ${{ secrets.DISCORD_WEBHOOK }}
