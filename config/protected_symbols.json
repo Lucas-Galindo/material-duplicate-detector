@@ -1,0 +1,4 @@
+{
+  "_comment": "Simbolos que carregam significado tecnico e nao podem ser removidos na normalizacao. Preenchido/consumido na Sprint 4.",
+  "protected": ["\"", "'", "/", "-", "#", "%", "°"]
+}
